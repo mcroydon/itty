@@ -32,7 +32,7 @@ except ImportError:
     from cgi import parse_qs
 
 __author__ = 'Daniel Lindsley'
-__version__ = ('0', '3', '1')
+__version__ = ('0', '3', '2')
 __license__ = 'MIT'
 
 
@@ -146,8 +146,7 @@ class Request(object):
 
     def build_get_dict(self):
         """Takes GET data and rips it apart into a dict."""
-        try:
-            raw_query_dict = parse_qs(self._environ['QUERY_STRING'], keep_blank_values=1)
+        raw_query_dict = parse_qs(self._environ['QUERY_STRING'], keep_blank_values=1)
         query_dict = {}
     
         for key, value in query_dict.items():
@@ -325,7 +324,6 @@ def wsgiref_adapter(host, port):
 
 
 def appengine_adapter(host, port):
-    # Experimental (Untested).
     from google.appengine.ext.webapp import util
     util.run_wsgi_app(handle_request)
 
@@ -392,13 +390,16 @@ def run_itty(server='wsgiref', host='localhost', port=8080, config=None):
         port = getattr(config_options, 'port', port)
         server = getattr(config_options, 'server', server)
     
-    print 'itty starting up (using %s)...' % server
-    print 'Listening on http://%s:%s...' % (host, port)
-    print 'Use Ctrl-C to quit.'
-    print
+    if server != 'appengine':
+        print 'itty starting up (using %s)...' % server
+        print 'Listening on http://%s:%s...' % (host, port)
+        print 'Use Ctrl-C to quit.'
+        print
     
     try:
         WSGI_ADAPTERS[server](host, port)
     except KeyboardInterrupt:
-        print "Shuting down..."
+        if server != 'appengine':
+            print "Shuting down..."
+        
         sys.exit()
